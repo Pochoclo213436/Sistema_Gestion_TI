@@ -27,30 +27,61 @@ Sistema integral para la gestión de equipos de tecnología en universidades pú
 
 1. **Clonar el repositorio**
 ```bash
-git clone 
+git clone <TU_REPO>
 cd sistema-gestion-ti
 ```
 
-2. **Configurar variables de entorno**
+2. **Configurar variables de entorno (opcional)**
 ```bash
 cp .env.example .env
-# Editar .env con tus configuraciones
+# Edita .env si lo necesitas
 ```
 
 3. **Construir y levantar servicios**
 ```bash
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 ```
 
-4. **Inicializar base de datos**
-```bash
-docker-compose exec api-gateway python init_db.py
-```
+4. **Base de datos**
+- La BD se inicializa automáticamente con `./database/schema.sql` montado en Postgres.
+- No es necesario ejecutar scripts manuales. Si vuelves a levantar y ya existen tablas, es normal ver mensajes de "DuplicateTable" en logs de init (se pueden ignorar).
 
 5. **Acceder a la aplicación**
 - Frontend: http://localhost:8501
 - API Gateway: http://localhost:8000/docs
+
+### Variables de entorno clave
+- `API_GATEWAY_URL`: URL interna que usan los microservicios/Frontend dentro de Docker (por defecto `http://api-gateway:8000`).
+- `PUBLIC_GATEWAY_URL`: URL pública para el navegador del usuario (por defecto `http://localhost:8000`). Útil para enlaces de descarga en el Frontend.
+
+Ejemplo en `docker-compose.yml` para el servicio `frontend`:
+```yaml
+environment:
+  - API_GATEWAY_URL=http://api-gateway:8000
+  - PUBLIC_GATEWAY_URL=http://localhost:8000
+```
+
+### Reportes (PDF/Excel)
+- Generar PDF: `POST /reportes/export/pdf` con body `{ "type": "equipos" | "mantenimientos" | "proveedores" }`.
+- Generar Excel: `POST /reportes/export/excel` con el mismo body.
+- Descargar archivos generados: `GET /reportes/export/file?filename=<basename>`
+  - Usa solo el nombre de archivo (basename). Los archivos se guardan en `/app/reportes` dentro del contenedor de reportes.
+
+El Frontend ya incluye botones de descarga. Si la descarga automática falla, se muestra un enlace directo que usa `PUBLIC_GATEWAY_URL`.
+
+### Rebuild rápido (cuando cambies código)
+```bash
+docker compose build <service>
+docker compose up -d <service>
+
+# Si cambias requirements (dependencias), fuerza rebuild sin caché
+docker compose build --no-cache <service>
+docker compose up -d <service>
+
+# Si el gateway no resuelve DNS a nuevos contenedores
+docker compose restart api-gateway
+```
 
 ## 📊 Estructura del Proyecto
 
