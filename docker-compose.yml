@@ -1,0 +1,101 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ti_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - backend
+
+  api-gateway:
+    build: ./services/api_gateway
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - equipos-service
+      - proveedores-service
+      - mantenimiento-service
+      - reportes-service
+      - agent-service
+    networks:
+      - backend
+
+  equipos-service:
+    build: ./services/equipos_service
+    container_name: equipos-service
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ti_management
+    networks:
+      - backend
+
+  proveedores-service:
+    build: ./services/proveedores_service
+    container_name: proveedores-service
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ti_management
+    networks:
+      - backend
+
+  mantenimiento-service:
+    build: ./services/mantenimiento_service
+    container_name: mantenimiento-service
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ti_management
+    networks:
+      - backend
+
+  reportes-service:
+    build: ./services/reportes_service
+    container_name: reportes-service
+    ports:
+      - "8004:8004"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ti_management
+    networks:
+      - backend
+
+  agent-service:
+    build: ./services/agent_service
+    container_name: agent-service
+    ports:
+      - "8005:8005"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ti_management
+    networks:
+      - backend
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "8501:8501"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
+    driver: bridge
