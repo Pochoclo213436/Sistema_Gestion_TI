@@ -217,10 +217,10 @@ async def export_excel(report_data: dict):
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
-            writer.close()  # asegurar que todos los bytes se escriben
+            writer.save()  # asegura que todo se escribe correctamente
         buffer.seek(0)
 
-        # Retornar StreamingResponse directamente
+        # Preparar respuesta
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"{report_type}_{timestamp}.xlsx"
 
