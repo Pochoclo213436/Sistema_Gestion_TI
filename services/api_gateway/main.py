@@ -6,11 +6,11 @@ app = FastAPI(title="API Gateway", version="1.0.0")
 
 # Rutas internas de servicios
 SERVICES = {
-    "equipos": "http://equipos-service:8001",
-    "proveedores": "http://proveedores-service:8002",
-    "mantenimiento": "http://mantenimiento-service:8003",
-    "reportes": "http://reportes-service:8004",
-    "agent": "http://agent-service:8005",
+    "equipos": "https://equipos-service-oy17.onrender.com",
+    "proveedores": "https://mantenimiento-service.onrender.com",
+    "mantenimiento": "https://proveedores-service-cgvs.onrender.com",
+    "reportes": "https://reportes-service-e03k.onrender.com",
+    "agent": "https://agent-service-odqo.onrender.com",
 }
 
 @app.get("/")

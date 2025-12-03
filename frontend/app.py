@@ -18,7 +18,7 @@ st.set_page_config(
 # Si no, usa 'http://api-gateway:8000' si se ejecuta dentro de Docker,
 # o 'http://localhost:8000' para desarrollo local.
 
-API_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8000")
+API_URL = os.getenv("API_GATEWAY_URL", "https://api-gateway-018c.onrender.com")
 
 
 # Estilos CSS personalizados
