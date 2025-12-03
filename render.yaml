@@ -22,15 +22,15 @@ services:
       - key: DEBUG
         value: "false"
       - key: EQUIPOS_SERVICE_URL
-        value: https://equipos-service.onrender.com
+        value: https://equipos-service-oy17.onrender.com
       - key: PROVEEDORES_SERVICE_URL
-        value: https://proveedores-service.onrender.com
+        value: https://proveedores-service-cgvs.onrender.com
       - key: MANTENIMIENTO_SERVICE_URL
-        value: https://mantenimiento-service.onrender.com
+        value: https://mantenimiento-service-onrender.com
       - key: REPORTES_SERVICE_URL
-        value: https://reportes-service.onrender.com
+        value: https://reportes-service-e03k.onrender.com
       - key: AGENT_SERVICE_URL
-        value: https://agent-service.onrender.com
+        value: https://agent-service-odqo.onrender.com
 
   # ==========================
   # EQUIPOS SERVICE
