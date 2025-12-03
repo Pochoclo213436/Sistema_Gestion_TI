@@ -150,4 +150,4 @@ services:
     dockerContext: ./frontend
     envVars:
       - key: PUBLIC_GATEWAY_URL
-        value: https://api-gateway.onrender.com
+        value: https://api-gateway-018c.onrender.com
