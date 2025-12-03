@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 import httpx
 
 app = FastAPI(title="API Gateway", version="1.0.0")
@@ -12,6 +12,13 @@ SERVICES = {
     "agent": "https://agent-service-odqo.onrender.com",
 }
 
+# Endpoints que devuelven archivos binarios
+BINARY_ENDPOINTS = [
+    "/reportes/export/excel",
+    "/reportes/export/pdf",
+    "/reportes/export/file"
+]
+
 @app.get("/")
 def root():
     return {"message": "API Gateway funcionando"}
@@ -22,12 +29,11 @@ async def gateway(service: str, path: str, request: Request):
         return JSONResponse(content={"detail": f"Servicio '{service}' no encontrado"}, status_code=404)
 
     target_url = f"{SERVICES[service]}/{path}"
+    full_path = f"/{service}/{path}"
 
-    async with httpx.AsyncClient(follow_redirects=True) as client:
+    async with httpx.AsyncClient(follow_redirects=True, timeout=60.0) as client:
         body = await request.body()
         headers = {k: v for k, v in request.headers.items() if k.lower() not in ["content-length", "host"]}
-
-        # Asegurarnos que aceptamos respuestas comprimidas
         headers["accept-encoding"] = "gzip, deflate"
 
         try:
@@ -37,21 +43,50 @@ async def gateway(service: str, path: str, request: Request):
                 headers=headers,
                 content=body,
                 params=request.query_params,
-                timeout=30
             )
 
-            # Intentar parsear JSON
+            # Verificar si es un endpoint de archivo binario
+            is_binary = any(full_path.startswith(endpoint) for endpoint in BINARY_ENDPOINTS)
+            
+            # También detectar por content-type
+            content_type = response.headers.get("content-type", "")
+            is_file = any(ct in content_type.lower() for ct in [
+                "application/pdf",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.ms-excel",
+                "application/octet-stream"
+            ])
+
+            # Si es un archivo binario, devolver el contenido sin procesarlo
+            if is_binary or is_file:
+                return Response(
+                    content=response.content,
+                    status_code=response.status_code,
+                    headers={
+                        "Content-Type": response.headers.get("Content-Type", "application/octet-stream"),
+                        "Content-Disposition": response.headers.get("Content-Disposition", ""),
+                        "Content-Length": response.headers.get("Content-Length", str(len(response.content))),
+                        "Cache-Control": "no-cache"
+                    }
+                )
+
+            # Para respuestas normales, intentar parsear JSON
             try:
                 data = response.json()
                 return JSONResponse(content=data, status_code=response.status_code)
             except Exception:
-                # Si no es JSON, devolver contenido como texto plano
+                # Si no es JSON, devolver como texto
                 return Response(
                     content=response.text,
                     media_type=response.headers.get("content-type", "text/plain"),
                     status_code=response.status_code
                 )
 
+        except httpx.TimeoutException:
+            return JSONResponse(
+                content={"detail": f"Timeout al conectar con el microservicio '{service}'"},
+                status_code=504
+            )
         except httpx.RequestError as exc:
             return JSONResponse(
                 content={"detail": f"No se pudo conectar con el microservicio '{service}'", "error": str(exc)},

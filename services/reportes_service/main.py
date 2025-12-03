@@ -211,42 +211,74 @@ async def export_excel(report_data: dict):
         # Ejecutar consulta
         async with pool.acquire() as conn:
             rows = await conn.fetch(query)
-            df = pd.DataFrame([dict(row) for row in rows])
+            
+            # Convertir a lista de diccionarios
+            data = [dict(row) for row in rows]
+            
+            # Verificar que hay datos
+            if not data:
+                raise HTTPException(status_code=404, detail="No hay datos para exportar")
+            
+            # Crear DataFrame
+            df = pd.DataFrame(data)
 
-        # Crear buffer en memoria
-        buffer = io.BytesIO()
+        # Crear el archivo Excel en memoria
+        output = io.BytesIO()
         
-        # Escribir Excel de manera segura
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        # Usar XlsxWriter como engine
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
-            # No es necesario writer.save() - el context manager lo hace
+            
+            # Obtener el workbook y worksheet para formato adicional (opcional)
+            workbook = writer.book
+            worksheet = writer.sheets[report_type.capitalize()]
+            
+            # Ajustar ancho de columnas automáticamente
+            for idx, col in enumerate(df.columns):
+                max_length = max(
+                    df[col].astype(str).apply(len).max(),
+                    len(str(col))
+                ) + 2
+                worksheet.set_column(idx, idx, min(max_length, 50))
         
-        # IMPORTANTE: Posicionar al inicio antes de leer
-        buffer.seek(0)
+        # CRÍTICO: Volver al inicio del buffer
+        output.seek(0)
         
-        # Leer todo el contenido del buffer
-        excel_content = buffer.read()
+        # Obtener el contenido completo
+        excel_bytes = output.read()
         
-        # Cerrar el buffer
-        buffer.close()
+        # Verificar que el archivo tiene contenido
+        if len(excel_bytes) == 0:
+            raise HTTPException(status_code=500, detail="El archivo Excel generado está vacío")
         
-        # Crear un nuevo BytesIO con el contenido para StreamingResponse
-        output_buffer = io.BytesIO(excel_content)
+        # Cerrar el buffer original
+        output.close()
         
-        # Preparar StreamingResponse
+        # Crear un nuevo buffer con el contenido para la respuesta
+        response_buffer = io.BytesIO(excel_bytes)
+        
+        # Preparar nombre del archivo
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"{report_type}_{timestamp}.xlsx"
 
+        # Retornar como StreamingResponse con headers correctos
         return StreamingResponse(
-            output_buffer,
+            response_buffer,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
-                "Content-Disposition": f"attachment; filename={filename}",
-                "Content-Length": str(len(excel_content))
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Content-Length": str(len(excel_bytes)),
+                "Cache-Control": "no-cache"
             }
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        print(f"Error al exportar Excel: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Error al exportar: {str(e)}")
 
 @app.get("/export/file")
