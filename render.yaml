@@ -9,6 +9,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./services/api_gateway/Dockerfile
+    dockerContext: ./services/api_gateway
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -40,6 +41,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./services/equipos_service/Dockerfile
+    dockerContext: ./services/equipos_service
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -59,6 +61,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./services/proveedores_service/Dockerfile
+    dockerContext: ./services/proveedores_service
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -78,6 +81,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./services/mantenimiento_service/Dockerfile
+    dockerContext: ./services/mantenimiento_service
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -97,6 +101,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./services/reportes_service/Dockerfile
+    dockerContext: ./services/reportes_service
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -118,6 +123,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./services/agent_service/Dockerfile
+    dockerContext: ./services/agent_service
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -141,6 +147,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
     envVars:
       - key: PUBLIC_GATEWAY_URL
         value: https://api-gateway.onrender.com
