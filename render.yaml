@@ -1,12 +1,4 @@
 services:
-  # ==========================
-  # BASE DE DATOS (POSTGRES)
-  # ==========================
-  - type: postgres
-    name: ti-management-db
-    plan: free
-    databaseName: ti_management
-    user: postgres
 
   # ==========================
   # API GATEWAY
