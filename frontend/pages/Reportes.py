@@ -411,63 +411,63 @@ with tab3:
                 except Exception as e:
                     st.error(f"Error: {e}")
                 
-            with col2:
-                st.markdown("### 📊 Exportar a Excel")
-                st.write("Genera un reporte detallado en formato Excel")
-                
-                tipo_reporte_excel = st.selectbox(
-                    "Tipo de Reporte (Excel)",
-                    ["equipos", "mantenimientos", "proveedores"]
-                )
-                
-                if st.button("📥 Generar Excel", use_container_width=True):
-                    with st.spinner("Generando Excel..."):
-                        try:
-                            response = requests.post(
-                                f"{API_URL}/reportes/export/excel",
-                                json={"type": tipo_reporte_excel},
-                                timeout=30,
-                                stream=True  # Agregar streaming
-                            )
+    with col2:
+        st.markdown("### 📊 Exportar a Excel")
+        st.write("Genera un reporte detallado en formato Excel")
+        
+        tipo_reporte_excel = st.selectbox(
+            "Tipo de Reporte (Excel)",
+            ["equipos", "mantenimientos", "proveedores"]
+        )
+        
+        if st.button("📥 Generar Excel", use_container_width=True):
+            with st.spinner("Generando Excel..."):
+                try:
+                    response = requests.post(
+                        f"{API_URL}/reportes/export/excel",
+                        json={"type": tipo_reporte_excel},
+                        timeout=30,
+                        stream=True  # Agregar streaming
+                    )
 
-                            if response.status_code == 200:
-                                # Verificar que el contenido no esté vacío
-                                excel_bytes = response.content
+                    if response.status_code == 200:
+                        # Verificar que el contenido no esté vacío
+                        excel_bytes = response.content
+                        
+                        if len(excel_bytes) == 0:
+                            st.error("El archivo Excel está vacío")
+                        else:
+                            # Nombre del archivo
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            safe_name = f"{tipo_reporte_excel}_{timestamp}.xlsx"
+                            
+                            # Verificar que los primeros bytes son correctos (ZIP header)
+                            if excel_bytes[:2] == b'PK':
+                                st.success(f"✅ Excel generado exitosamente ({len(excel_bytes)} bytes)")
                                 
-                                if len(excel_bytes) == 0:
-                                    st.error("El archivo Excel está vacío")
-                                else:
-                                    # Nombre del archivo
-                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                    safe_name = f"{tipo_reporte_excel}_{timestamp}.xlsx"
-                                    
-                                    # Verificar que los primeros bytes son correctos (ZIP header)
-                                    if excel_bytes[:2] == b'PK':
-                                        st.success(f"✅ Excel generado exitosamente ({len(excel_bytes)} bytes)")
-                                        
-                                        st.download_button(
-                                            label="⬇️ Descargar Excel",
-                                            data=excel_bytes,
-                                            file_name=safe_name,
-                                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                            use_container_width=True
-                                        )
-                                    else:
-                                        st.error("El archivo descargado no es un Excel válido")
-                                        st.code(f"Primeros bytes: {excel_bytes[:50]}")
+                                st.download_button(
+                                    label="⬇️ Descargar Excel",
+                                    data=excel_bytes,
+                                    file_name=safe_name,
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True
+                                )
                             else:
-                                st.error(f"Error al generar Excel: HTTP {response.status_code}")
-                                try:
-                                    error_detail = response.json()
-                                    st.error(f"Detalle: {error_detail}")
-                                except:
-                                    st.error(f"Respuesta: {response.text[:200]}")
-                        except requests.exceptions.Timeout:
-                            st.error("La petición tardó demasiado. El servidor puede estar sobrecargado.")
-                        except Exception as e:
-                            st.error(f"Error: {str(e)}")
-                            import traceback
-                            st.code(traceback.format_exc())
+                                st.error("El archivo descargado no es un Excel válido")
+                                st.code(f"Primeros bytes: {excel_bytes[:50]}")
+                    else:
+                        st.error(f"Error al generar Excel: HTTP {response.status_code}")
+                        try:
+                            error_detail = response.json()
+                            st.error(f"Detalle: {error_detail}")
+                        except:
+                            st.error(f"Respuesta: {response.text[:200]}")
+                except requests.exceptions.Timeout:
+                    st.error("La petición tardó demasiado. El servidor puede estar sobrecargado.")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+                    import traceback
+                    st.code(traceback.format_exc())
 
 with tab4:
     st.subheader("🔍 Análisis Avanzado")
