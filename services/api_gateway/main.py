@@ -1,12 +1,9 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 import httpx
 
 app = FastAPI(title="API Gateway", version="1.0.0")
 
-# ==========================
-# Definición de servicios
-# ==========================
 SERVICES = {
     "equipos": "https://equipos-service-oy17.onrender.com",
     "proveedores": "https://proveedores-service-cgvs.onrender.com",
@@ -15,16 +12,10 @@ SERVICES = {
     "agent": "https://agent-service-odqo.onrender.com",
 }
 
-# ==========================
-# Ruta raíz
-# ==========================
 @app.get("/")
 def root():
     return {"message": "API Gateway funcionando"}
 
-# ==========================
-# Proxy a los microservicios
-# ==========================
 @app.api_route("/{service}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def gateway(service: str, path: str, request: Request):
     if service not in SERVICES:
@@ -32,41 +23,40 @@ async def gateway(service: str, path: str, request: Request):
 
     target_url = f"{SERVICES[service]}/{path}"
 
-    async with httpx.AsyncClient() as client:
-        # Extraer cuerpo de la solicitud
+    async with httpx.AsyncClient(follow_redirects=True) as client:
         body = await request.body()
-
-        # Filtrar headers, evitando conflictos
         headers = {k: v for k, v in request.headers.items() if k.lower() not in ["content-length", "host"]}
 
+        # Asegurarnos que aceptamos respuestas comprimidas
+        headers["accept-encoding"] = "gzip, deflate"
+
         try:
-            # Enviar solicitud al microservicio
             response = await client.request(
                 method=request.method,
                 url=target_url,
                 headers=headers,
                 content=body,
                 params=request.query_params,
-                timeout=30  # timeout opcional
+                timeout=30
             )
 
             # Intentar parsear JSON
             try:
                 data = response.json()
+                return JSONResponse(content=data, status_code=response.status_code)
             except Exception:
-                return JSONResponse(
-                    content={"detail": "El microservicio no devolvió JSON válido", "raw": response.text},
-                    status_code=500
+                # Si no es JSON, devolver contenido como texto plano
+                return Response(
+                    content=response.text,
+                    media_type=response.headers.get("content-type", "text/plain"),
+                    status_code=response.status_code
                 )
-
-            return JSONResponse(content=data, status_code=response.status_code)
 
         except httpx.RequestError as exc:
             return JSONResponse(
                 content={"detail": f"No se pudo conectar con el microservicio '{service}'", "error": str(exc)},
                 status_code=500
             )
-
         except Exception as exc:
             return JSONResponse(
                 content={"detail": "Error inesperado en el Gateway", "error": str(exc)},
