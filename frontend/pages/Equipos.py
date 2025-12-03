@@ -6,7 +6,7 @@ from datetime import datetime, date
 
 st.set_page_config(page_title="Gestión de Equipos", page_icon="📦", layout="wide")
 
-API_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8000")
+API_URL = os.getenv("API_GATEWAY_URL", "https://api-gateway-018c.onrender.com")
 
 st.title("📦 Gestión de Equipos")
 st.markdown("---")

@@ -5,7 +5,7 @@ import os
 
 st.set_page_config(page_title="Mantenimiento", page_icon="🛠️", layout="wide")
 
-API_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8000")
+API_URL = os.getenv("API_GATEWAY_URL", "https://api-gateway-018c.onrender.com")
 
 st.title("🛠️ Mantenimientos")
 st.markdown("---")

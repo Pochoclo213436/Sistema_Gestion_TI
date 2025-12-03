@@ -8,9 +8,9 @@ from datetime import datetime
 
 st.set_page_config(page_title="Reportes y Análisis", page_icon="📊", layout="wide")
 
-API_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8000")
+API_URL = os.getenv("API_GATEWAY_URL", "https://api-gateway-018c.onrender.com")
 # URL pública para el navegador del usuario
-PUBLIC_GATEWAY_URL = os.getenv("PUBLIC_GATEWAY_URL", "http://localhost:8000")
+PUBLIC_GATEWAY_URL = os.getenv("PUBLIC_GATEWAY_URL", "https://api-gateway-018c.onrender.com")
 
 # Utilidades de normalización para respuestas inesperadas
 def normalize_list_of_dicts(data, keys):
