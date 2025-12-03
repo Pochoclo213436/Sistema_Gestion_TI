@@ -213,12 +213,11 @@ async def export_excel(report_data: dict):
             rows = await conn.fetch(query)
             df = pd.DataFrame([dict(row) for row in rows])
 
-        # Crear buffer en memoria y escribir Excel
+        # Crear buffer en memoria y escribir Excel de manera segura
         buffer = io.BytesIO()
-        writer = pd.ExcelWriter(buffer, engine='xlsxwriter')
-        df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
-        writer.close()  # FINALIZA correctamente el archivo
-        buffer.seek(0)  # reinicia el buffer para lectura
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
+        buffer.seek(0)  # reinicia buffer para lectura
 
         # Preparar StreamingResponse
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
