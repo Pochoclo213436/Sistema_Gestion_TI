@@ -8,6 +8,8 @@ from datetime import date
 app = FastAPI(title="Proveedores Service", version="1.0.0")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL no está configurada para proveedores_service")     
 
 # Pool global para evitar demasiadas conexiones
 pool: asyncpg.Pool | None = None
@@ -15,6 +17,8 @@ pool: asyncpg.Pool | None = None
 @app.on_event("startup")
 async def on_startup():
     global pool
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL no está configurada")
     pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=5)
 
 @app.on_event("shutdown")

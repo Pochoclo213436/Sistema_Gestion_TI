@@ -17,6 +17,10 @@ app = FastAPI(title="Reportes Service", version="1.0.0")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+if not DATABASE_URL:
+    raise RuntimeError("❌ DATABASE_URL no está configurado. Render no podrá conectar a la base de datos.")
+
+
 # Pool global para evitar demasiadas conexiones
 pool: asyncpg.Pool | None = None
 
@@ -205,8 +209,9 @@ async def export_excel(report_data: dict):
         async with pool.acquire() as conn:
             rows = await conn.fetch(query)
             df = pd.DataFrame([dict(row) for row in rows])
-            filename = f"/app/reportes/{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            os.makedirs("/app/reportes", exist_ok=True)
+            output_dir = "/tmp/reportes"
+            os.makedirs(output_dir, exist_ok=True)
+            filename = f"{output_dir}/{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             df.to_excel(filename, index=False)
             return {"filename": filename, "message": "Excel exportado exitosamente"}
     except Exception as e:

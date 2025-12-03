@@ -1,102 +1,98 @@
 from fastapi import FastAPI, BackgroundTasks
 import asyncpg
 import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 
 app = FastAPI(title="Agent Service", version="1.0.0")
 
+# ================================
+#  CONFIGURACIÓN DEL POOL GLOBAL
+# ================================
 DATABASE_URL = os.getenv("DATABASE_URL")
+pool: asyncpg.Pool | None = None
 
-async def get_db_pool():
-    return await asyncpg.create_pool(DATABASE_URL)
+if not DATABASE_URL:
+    raise RuntimeError("❌ ERROR: DATABASE_URL no está configurado.")
+
+@app.on_event("startup")
+async def startup():
+    global pool
+    try:
+        pool = await asyncpg.create_pool(
+            DATABASE_URL,
+            min_size=1,
+            max_size=5,
+            timeout=10
+        )
+        print("✅ Pool de conexiones inicializado correctamente.")
+    except Exception as e:
+        print(f"❌ Error inicializando pool: {e}")
+        raise
+
+@app.on_event("shutdown")
+async def shutdown():
+    global pool
+    if pool:
+        await pool.close()
+        print("🧹 Pool cerrado correctamente.")
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
-# ===========================
-#  NOTIFICACIONES SIMPLES
-# ===========================
+# ===========================================
+#  FUNCIONES PARA AGENTES
+# ===========================================
 
-async def crear_notificacion(pool, titulo: str, mensaje: str):
-    """Inserta una notificación (solo columnas reales)."""
-    query = """
-        INSERT INTO notificaciones (titulo, mensaje)
-        VALUES ($1, $2)
-    """
+async def crear_notificacion(titulo: str, mensaje: str):
+    query = "INSERT INTO notificaciones (titulo, mensaje) VALUES ($1, $2)"
     async with pool.acquire() as conn:
         await conn.execute(query, titulo, mensaje)
 
-@app.get("/notificaciones")
-async def get_notificaciones(leida: bool | None = None, limit: int = 50):
-    pool = await get_db_pool()
+async def agente_mantenimiento():
+    await crear_notificacion("Mantenimiento Revisado", "Se ejecutó check-maintenance")
 
-    query = """
-        SELECT id, titulo, mensaje, leida, fecha
-        FROM notificaciones
-        WHERE ($1::boolean IS NULL OR leida = $1)
-        ORDER BY fecha DESC
-        LIMIT $2
-    """
+async def agente_obsolescencia():
+    await crear_notificacion("Obsolescencia Revisada", "Se ejecutó check-obsolescence")
 
-    async with pool.acquire() as conn:
-        rows = await conn.fetch(query, leida, limit)
-        return [dict(r) for r in rows]
+async def agente_garantias():
+    await crear_notificacion("Garantías Revisadas", "Se ejecutó check-warranties")
 
-@app.put("/notificaciones/{notif_id}/marcar-leida")
-async def marcar_notificacion_leida(notif_id: int):
-    pool = await get_db_pool()
-
-    async with pool.acquire() as conn:
-        await conn.execute(
-            "UPDATE notificaciones SET leida = TRUE WHERE id = $1",
-            notif_id
-        )
-
-    return {"message": "Notificación marcada como leída"}
+async def agente_costos():
+    await crear_notificacion("Costos Analizados", "Se ejecutó analyze-maintenance-costs")
 
 # ===========================================
-#   ENDPOINTS (NO OPERATIVOS) PERO SE MANTIENEN
-#   → Generarán notificaciones simples
+#  ENDPOINTS
 # ===========================================
 
 @app.post("/check-maintenance")
 async def check_maintenance_reminders():
-    pool = await get_db_pool()
-
-    await crear_notificacion(pool, "Mantenimiento Revisado", "Se ejecutó check-maintenance")
+    await agente_mantenimiento()
     return {"status": "ok"}
 
 @app.post("/check-obsolescence")
 async def check_equipment_obsolescence():
-    pool = await get_db_pool()
-
-    await crear_notificacion(pool, "Obsolescencia Revisada", "Se ejecutó check-obsolescence")
+    await agente_obsolescencia()
     return {"status": "ok"}
 
 @app.post("/check-warranties")
 async def check_warranty_expiration():
-    pool = await get_db_pool()
-
-    await crear_notificacion(pool, "Garantías Revisadas", "Se ejecutó check-warranties")
+    await agente_garantias()
     return {"status": "ok"}
 
 @app.post("/analyze-maintenance-costs")
 async def analyze_maintenance_costs():
-    pool = await get_db_pool()
-
-    await crear_notificacion(pool, "Costos Analizados", "Se ejecutó analyze-maintenance-costs")
+    await agente_costos()
     return {"status": "ok"}
 
 @app.post("/run-all-agents")
 async def run_all_agents(background_tasks: BackgroundTasks):
 
     async def ejecutar():
-        await check_maintenance_reminders()
-        await check_equipment_obsolescence()
-        await check_warranty_expiration()
-        await analyze_maintenance_costs()
+        await agente_mantenimiento()
+        await agente_obsolescencia()
+        await agente_garantias()
+        await agente_costos()
 
     background_tasks.add_task(ejecutar)
-
     return {"message": "Agentes ejecutándose en segundo plano"}

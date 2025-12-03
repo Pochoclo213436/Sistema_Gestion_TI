@@ -4,21 +4,21 @@ import os
 
 app = FastAPI(title="Servicio de Mantenimiento", version="1.0.0")
 
-# ---- Conexión a la base de datos ----
+# ---- Conexión para Render ----
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL no está configurada")
+
 def get_connection():
-    return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "postgres"),
-        database=os.getenv("POSTGRES_DB", "ti_management"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres")
-    )
+    return psycopg2.connect(DATABASE_URL)
+
+# ---- Endpoints ----
 
 @app.get("/mantenimientos")
 def listar_mantenimientos():
     conn = get_connection()
     cur = conn.cursor()
-    # La tabla 'mantenimientos' no tiene columna 'fecha'. Usamos una fecha derivada.
-    # Preferencia: realizada -> programada -> registro
     cur.execute(
         """
         SELECT id,
