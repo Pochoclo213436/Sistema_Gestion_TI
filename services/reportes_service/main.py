@@ -175,8 +175,9 @@ async def get_equipos_antiguedad():
 async def export_excel(report_data: dict):
     report_type = report_data.get("type", "equipos")
     pool = await get_db_pool()
-    
+
     try:
+        # Selección de consulta según tipo de reporte
         if report_type == "equipos":
             query = """
                 SELECT e.codigo_inventario, e.nombre, e.marca, e.modelo,
@@ -205,15 +206,27 @@ async def export_excel(report_data: dict):
             """
         else:
             raise HTTPException(status_code=400, detail="Tipo de reporte no válido")
-        
+
+        # Ejecutar consulta
         async with pool.acquire() as conn:
             rows = await conn.fetch(query)
             df = pd.DataFrame([dict(row) for row in rows])
-            output_dir = "/app/reportes"
-            os.makedirs(output_dir, exist_ok=True)
-            filename = f"{output_dir}/{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            df.to_excel(filename, index=False)
-            return {"filename": filename, "message": "Excel exportado exitosamente"}
+
+        # Crear buffer en memoria y escribir Excel
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
+        buffer.seek(0)
+
+        # Guardar archivo en disco de forma segura
+        output_dir = "/app/reportes"
+        os.makedirs(output_dir, exist_ok=True)
+        filename = f"{output_dir}/{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        with open(filename, "wb") as f:
+            f.write(buffer.getvalue())
+
+        return {"filename": filename, "message": "Excel exportado exitosamente"}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al exportar: {str(e)}")
 
