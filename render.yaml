@@ -11,9 +11,11 @@ services:
     dockerfilePath: ./services/api_gateway/Dockerfile
     envVars:
       - key: DATABASE_URL
-        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
+        fromDatabase:
+          name: ti-management-db
+          property: connectionString
       - key: SECRET_KEY
-        sync: false
+        value: "YOUR_SECRET_KEY"
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -36,10 +38,13 @@ services:
     name: equipos-service
     env: docker
     plan: free
+    region: oregon
     dockerfilePath: ./services/equipos_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
+        fromDatabase:
+          name: ti-management-db
+          property: connectionString
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -52,10 +57,13 @@ services:
     name: proveedores-service
     env: docker
     plan: free
+    region: oregon
     dockerfilePath: ./services/proveedores_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
+        fromDatabase:
+          name: ti-management-db
+          property: connectionString
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -68,10 +76,13 @@ services:
     name: mantenimiento-service
     env: docker
     plan: free
+    region: oregon
     dockerfilePath: ./services/mantenimiento_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
+        fromDatabase:
+          name: ti-management-db
+          property: connectionString
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -84,10 +95,13 @@ services:
     name: reportes-service
     env: docker
     plan: free
+    region: oregon
     dockerfilePath: ./services/reportes_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
+        fromDatabase:
+          name: ti-management-db
+          property: connectionString
       - key: REPORTS_PATH
         value: /data
       - key: ENVIRONMENT
@@ -102,10 +116,13 @@ services:
     name: agent-service
     env: docker
     plan: free
+    region: oregon
     dockerfilePath: ./services/agent_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
+        fromDatabase:
+          name: ti-management-db
+          property: connectionString
       - key: AGENT_RUN_INTERVAL_HOURS
         value: "24"
       - key: AGENT_MAINTENANCE_CHECK_DAYS
@@ -122,6 +139,7 @@ services:
     name: ti-frontend
     env: docker
     plan: free
+    region: oregon
     dockerfilePath: ./frontend/Dockerfile
     envVars:
       - key: PUBLIC_GATEWAY_URL
