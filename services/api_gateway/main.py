@@ -7,7 +7,7 @@ app = FastAPI(title="API Gateway", version="1.0.0")
 SERVICES = {
     "equipos": "https://equipos-service-oy17.onrender.com",
     "proveedores": "https://proveedores-service-cgvs.onrender.com",
-    "mantenimiento": "https://mantenimiento-service-onrender.com",
+    "mantenimiento": "https://mantenimiento-service.onrender.com",
     "reportes": "https://reportes-service-e03k.onrender.com",
     "agent": "https://agent-service-odqo.onrender.com",
 }
