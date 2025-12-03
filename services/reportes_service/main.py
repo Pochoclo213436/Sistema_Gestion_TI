@@ -213,20 +213,37 @@ async def export_excel(report_data: dict):
             rows = await conn.fetch(query)
             df = pd.DataFrame([dict(row) for row in rows])
 
-        # Crear buffer en memoria y escribir Excel de manera segura
+        # Crear buffer en memoria
         buffer = io.BytesIO()
+        
+        # Escribir Excel de manera segura
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
-        buffer.seek(0)  # reinicia buffer para lectura
-
+            # No es necesario writer.save() - el context manager lo hace
+        
+        # IMPORTANTE: Posicionar al inicio antes de leer
+        buffer.seek(0)
+        
+        # Leer todo el contenido del buffer
+        excel_content = buffer.read()
+        
+        # Cerrar el buffer
+        buffer.close()
+        
+        # Crear un nuevo BytesIO con el contenido para StreamingResponse
+        output_buffer = io.BytesIO(excel_content)
+        
         # Preparar StreamingResponse
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"{report_type}_{timestamp}.xlsx"
 
         return StreamingResponse(
-            buffer,
+            output_buffer,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Length": str(len(excel_content))
+            }
         )
 
     except Exception as e:
