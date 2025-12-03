@@ -240,14 +240,13 @@ async def get_costos_mantenimiento(year: Optional[int] = None):
     
     query = """
         SELECT 
-            TO_CHAR(fecha_realizada, 'Month') as mes,
-            EXTRACT(MONTH FROM fecha_realizada) as mes_num,
+            TO_CHAR(COALESCE(fecha_realizada, fecha_programada, fecha_registro), 'Month') as mes,
+            EXTRACT(MONTH FROM COALESCE(fecha_realizada, fecha_programada, fecha_registro)) as mes_num,
             tipo,
             SUM(costo) as total_costo,
             COUNT(*) as cantidad
         FROM mantenimientos
-        WHERE EXTRACT(YEAR FROM fecha_realizada) = $1
-        AND fecha_realizada IS NOT NULL
+        WHERE EXTRACT(YEAR FROM COALESCE(fecha_realizada, fecha_programada, fecha_registro)) = $1
         GROUP BY mes, mes_num, tipo
         ORDER BY mes_num, tipo
     """

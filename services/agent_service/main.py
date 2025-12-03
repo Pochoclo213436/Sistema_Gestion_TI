@@ -96,3 +96,21 @@ async def run_all_agents(background_tasks: BackgroundTasks):
 
     background_tasks.add_task(ejecutar)
     return {"message": "Agentes ejecutándose en segundo plano"}
+
+@app.get("/notificaciones")
+async def listar_notificaciones(leida: bool | None = None):
+    """
+    Retorna las notificaciones. 
+    Si se pasa 'leida', filtra por estado de lectura.
+    """
+    async with pool.acquire() as conn:
+        if leida is not None:
+            query = "SELECT * FROM notificaciones WHERE leida=$1 ORDER BY fecha DESC"
+            rows = await conn.fetch(query, leida)
+        else:
+            query = "SELECT * FROM notificaciones ORDER BY fecha DESC"
+            rows = await conn.fetch(query)
+        
+        # Convertir a lista de dicts
+        return [dict(row) for row in rows]
+
