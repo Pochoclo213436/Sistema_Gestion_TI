@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias Python
-COPY services/reportes_service/requirements.txt .
-RUN pip install --no-cache-dir -r services/reportes_service/requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar todo el código del servicio
-COPY services/reportes_service .
+COPY . .
 
 # Entrypoint (si aplica)
-COPY services/reportes_service/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8000
