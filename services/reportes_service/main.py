@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from typing import Optional
 import asyncpg
 import os
+from fastapi.responses import StreamingResponse
 from datetime import datetime, date
 import pandas as pd
 from reportlab.lib.pagesizes import letter, A4
@@ -216,16 +217,18 @@ async def export_excel(report_data: dict):
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
+            writer.close()  # asegurar que todos los bytes se escriben
         buffer.seek(0)
 
-        # Guardar archivo en disco de forma segura
-        output_dir = "/app/reportes"
-        os.makedirs(output_dir, exist_ok=True)
-        filename = f"{output_dir}/{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-        with open(filename, "wb") as f:
-            f.write(buffer.getvalue())
+        # Retornar StreamingResponse directamente
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{report_type}_{timestamp}.xlsx"
 
-        return {"filename": filename, "message": "Excel exportado exitosamente"}
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al exportar: {str(e)}")
