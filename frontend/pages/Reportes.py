@@ -428,39 +428,23 @@ with tab3:
                         json={"type": tipo_reporte_excel},
                         timeout=30
                     )
-                    
+
                     if response.status_code == 200:
-                        result = response.json()
-                        fname = result.get('filename')
-                        st.success(f"✅ Excel generado: {fname}")
-                        if fname:
-                            try:
-                                from os.path import basename
-                                safe_name = basename(fname)
-                                file_resp = requests.get(
-                                    f"{API_URL}/reportes/export/file",
-                                    params={"filename": safe_name},
-                                    timeout=30
-                                )
-                                if file_resp.status_code == 200:
-                                    st.download_button(
-                                        label="⬇️ Descargar Excel",
-                                        data=file_resp.content,
-                                        file_name=safe_name,
-                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                        use_container_width=True
-                                    )
-                                else:
-                                    st.info(f"Excel generado en servidor, pero no se pudo descargar automáticamente (HTTP {file_resp.status_code}).")
-                                    st.link_button(
-                                        label="🔗 Abrir/Descargar Excel",
-                                        url=f"{PUBLIC_GATEWAY_URL}/reportes/export/file?filename={safe_name}",
-                                        use_container_width=True
-                                    )
-                            except Exception as de:
-                                st.info(f"Excel guardado en servidor. Descarga manual fallida: {de}")
+                        # Obtenemos el contenido binario directamente
+                        excel_bytes = response.content
+                        # Nombre del archivo
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        safe_name = f"{tipo_reporte_excel}_{timestamp}.xlsx"
+
+                        st.download_button(
+                            label="⬇️ Descargar Excel",
+                            data=excel_bytes,
+                            file_name=safe_name,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True
+                        )
                     else:
-                        st.error("Error al generar Excel")
+                        st.error(f"Error al generar Excel: HTTP {response.status_code}")
                 except Exception as e:
                     st.error(f"Error: {e}")
 
