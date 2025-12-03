@@ -11,9 +11,7 @@ services:
     dockerfilePath: ./services/api_gateway/Dockerfile
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: ti-management-db
-          property: connectionString
+        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
       - key: SECRET_KEY
         sync: false
       - key: ENVIRONMENT
@@ -41,9 +39,7 @@ services:
     dockerfilePath: ./services/equipos_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: ti-management-db
-          property: connectionString
+        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -59,9 +55,7 @@ services:
     dockerfilePath: ./services/proveedores_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: ti-management-db
-          property: connectionString
+        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -77,9 +71,7 @@ services:
     dockerfilePath: ./services/mantenimiento_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: ti-management-db
-          property: connectionString
+        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
@@ -95,9 +87,7 @@ services:
     dockerfilePath: ./services/reportes_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: ti-management-db
-          property: connectionString
+        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
       - key: REPORTS_PATH
         value: /data
       - key: ENVIRONMENT
@@ -115,9 +105,7 @@ services:
     dockerfilePath: ./services/agent_service/Dockerfile
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: ti-management-db
-          property: connectionString
+        value: postgresql://ti_management_db_user:AFIrFKuaLJc9ZnJVsaaf74KruZmiDN0z@dpg-d4npgis9c44c73d2tig0-a.oregon-postgres.render.com/ti_management_db
       - key: AGENT_RUN_INTERVAL_HOURS
         value: "24"
       - key: AGENT_MAINTENANCE_CHECK_DAYS
