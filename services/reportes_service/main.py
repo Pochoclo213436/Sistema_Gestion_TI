@@ -209,7 +209,7 @@ async def export_excel(report_data: dict):
         async with pool.acquire() as conn:
             rows = await conn.fetch(query)
             df = pd.DataFrame([dict(row) for row in rows])
-            output_dir = "/tmp/reportes"
+            output_dir = "/app/reportes"
             os.makedirs(output_dir, exist_ok=True)
             filename = f"{output_dir}/{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             df.to_excel(filename, index=False)
@@ -240,13 +240,14 @@ async def get_costos_mantenimiento(year: Optional[int] = None):
     
     query = """
         SELECT 
-            TO_CHAR(COALESCE(fecha_realizada, fecha_programada, fecha_registro), 'Month') as mes,
-            EXTRACT(MONTH FROM COALESCE(fecha_realizada, fecha_programada, fecha_registro)) as mes_num,
+            TO_CHAR(fecha_realizada, 'Month') as mes,
+            EXTRACT(MONTH FROM fecha_realizada) as mes_num,
             tipo,
             SUM(costo) as total_costo,
             COUNT(*) as cantidad
         FROM mantenimientos
-        WHERE EXTRACT(YEAR FROM COALESCE(fecha_realizada, fecha_programada, fecha_registro)) = $1
+        WHERE EXTRACT(YEAR FROM fecha_realizada) = $1
+        AND fecha_realizada IS NOT NULL
         GROUP BY mes, mes_num, tipo
         ORDER BY mes_num, tipo
     """
