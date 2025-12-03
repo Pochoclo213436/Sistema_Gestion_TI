@@ -215,12 +215,12 @@ async def export_excel(report_data: dict):
 
         # Crear buffer en memoria y escribir Excel
         buffer = io.BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
-            writer.save()  # asegura que todo se escribe correctamente
-        buffer.seek(0)
+        writer = pd.ExcelWriter(buffer, engine='xlsxwriter')
+        df.to_excel(writer, index=False, sheet_name=report_type.capitalize())
+        writer.close()  # FINALIZA correctamente el archivo
+        buffer.seek(0)  # reinicia el buffer para lectura
 
-        # Preparar respuesta
+        # Preparar StreamingResponse
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"{report_type}_{timestamp}.xlsx"
 
